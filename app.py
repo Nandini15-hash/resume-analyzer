@@ -3,7 +3,7 @@ from pathlib import Path
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from werkzeug.utils import secure_filename
 from database import close_db, init_db, create_user, get_user_by_email, save_resume, get_resume_by_id, get_recent_resumes
-from utils import extract_text_from_resume, score_resume_and_extract_skills
+from utils import extract_text_from_resume, score_resume_and_extract_skills, compute_ats_score
 
 BASE_DIR = Path(__file__).resolve().parent
 UPLOAD_FOLDER = BASE_DIR / "uploads"
@@ -149,6 +149,38 @@ def resume_detail(resume_id):
             "uploaded_at": resume[6],
         },
     )
+
+
+@app.route("/ats-match", methods=["GET", "POST"])
+@login_required
+def ats_match():
+    result = None
+    if request.method == "POST":
+        job_description = request.form.get("job_description", "").strip()
+        file = request.files.get("resume")
+        if not job_description:
+            flash("Please paste a job description.", "danger")
+        elif not file or file.filename == "":
+            flash("Please upload a resume file.", "danger")
+        elif not allowed_file(file.filename):
+            flash("Only PDF and DOCX files are supported.", "danger")
+        else:
+            filename = secure_filename(file.filename)
+            upload_path = UPLOAD_FOLDER / filename
+            file.save(upload_path)
+            try:
+                resume_text = extract_text_from_resume(upload_path)
+                score, matched, missing = compute_ats_score(resume_text, job_description)
+                result = {
+                    "score": score,
+                    "matched": matched,
+                    "missing": missing,
+                    "filename": filename,
+                }
+            except Exception as error:
+                flash("Could not parse the resume. Please upload a valid PDF or DOCX file.", "danger")
+                app.logger.error("ATS match error: %s", error)
+    return render_template("ats.html", title="ATS Match", result=result)
 
 
 if __name__ == "__main__":

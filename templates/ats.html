@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="ats-shell">
+    <div class="page-head">
+        <div>
+            <h1>ATS Match</h1>
+            <p class="subtitle">Upload your resume and paste a job description to see how well they match.</p>
+        </div>
+        <a href="{{ url_for('dashboard') }}" class="button-secondary">Back to dashboard</a>
+    </div>
+
+    <div class="ats-layout">
+        <div class="card ats-form-card">
+            <form method="post" enctype="multipart/form-data" class="form-card">
+                <label>Resume file (PDF or DOCX)</label>
+                <input type="file" name="resume" accept=".pdf,.docx" required />
+
+                <label>Job description</label>
+                <textarea name="job_description" rows="12" placeholder="Paste the full job description here..." required>{{ request.form.get('job_description', '') }}</textarea>
+
+                <button type="submit" class="button-primary">Check ATS Score</button>
+            </form>
+        </div>
+
+        {% if result %}
+        <div class="ats-result">
+            <div class="card ats-score-card">
+                <p class="ats-label">ATS Match Score</p>
+                <div class="ats-score-ring">
+                    <svg viewBox="0 0 120 120" class="ats-ring-svg">
+                        <circle cx="60" cy="60" r="52" class="ring-bg" />
+                        <circle cx="60" cy="60" r="52" class="ring-fill"
+                            stroke-dasharray="{{ (result.score / 100 * 326.73) | round(2) }} 326.73"
+                            stroke-dashoffset="0" />
+                    </svg>
+                    <div class="ats-score-text">
+                        <strong>{{ result.score }}%</strong>
+                        <span>match</span>
+                    </div>
+                </div>
+                <p class="ats-filename">Analyzed: <strong>{{ result.filename }}</strong></p>
+                {% if result.score >= 75 %}
+                <p class="ats-verdict ats-verdict-good">Strong match — your resume aligns well with this role.</p>
+                {% elif result.score >= 50 %}
+                <p class="ats-verdict ats-verdict-ok">Moderate match — consider adding more keywords from the job description.</p>
+                {% else %}
+                <p class="ats-verdict ats-verdict-low">Low match — tailor your resume to include more relevant keywords.</p>
+                {% endif %}
+            </div>
+
+            <div class="card ats-keywords-card">
+                <div class="ats-kw-section">
+                    <h2>Matched keywords <span class="kw-count kw-count-matched">{{ result.matched | length }}</span></h2>
+                    {% if result.matched %}
+                    <div class="skill-tags">
+                        {% for kw in result.matched %}
+                        <span class="kw-matched">{{ kw }}</span>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="ats-empty">No keyword matches found.</p>
+                    {% endif %}
+                </div>
+
+                <div class="ats-kw-section">
+                    <h2>Missing keywords <span class="kw-count kw-count-missing">{{ result.missing | length }}</span></h2>
+                    {% if result.missing %}
+                    <div class="skill-tags">
+                        {% for kw in result.missing[:40] %}
+                        <span class="kw-missing">{{ kw }}</span>
+                        {% endfor %}
+                    </div>
+                    {% if result.missing | length > 40 %}
+                    <p class="ats-more">+{{ result.missing | length - 40 }} more missing keywords</p>
+                    {% endif %}
+                    {% else %}
+                    <p class="ats-empty">No missing keywords — great alignment!</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -3,6 +3,26 @@ from pathlib import Path
 import pdfplumber
 import docx
 
+STOP_WORDS = {
+    "a", "an", "the", "and", "or", "but", "in", "on", "at", "to", "for",
+    "of", "with", "by", "from", "as", "is", "was", "are", "were", "be",
+    "been", "being", "have", "has", "had", "do", "does", "did", "will",
+    "would", "could", "should", "may", "might", "shall", "can", "need",
+    "this", "that", "these", "those", "i", "you", "we", "they", "he", "she",
+    "it", "its", "our", "your", "their", "my", "his", "her", "who", "which",
+    "what", "when", "where", "how", "why", "if", "then", "than", "so", "yet",
+    "both", "either", "neither", "not", "no", "nor", "only", "own", "same",
+    "such", "too", "very", "just", "more", "most", "other", "some", "any",
+    "all", "each", "every", "few", "less", "also", "about", "above", "after",
+    "before", "between", "through", "during", "including", "without", "per",
+    "up", "down", "out", "off", "over", "under", "again", "further", "once",
+    "here", "there", "while", "although", "because", "since", "until",
+    "unless", "however", "therefore", "thus", "hence", "must", "use",
+    "using", "used", "well", "new", "good", "high", "strong", "able",
+    "across", "within", "into", "upon", "toward", "towards", "work",
+    "working", "s", "e", "re", "ve", "ll", "t", "d", "m",
+}
+
 COMMON_SKILLS = [
     "python", "java", "javascript", "sql", "excel", "data analysis", "communication",
     "teamwork", "project management", "machine learning", "aws", "azure", "react", "django",
@@ -86,3 +106,24 @@ def score_resume_and_extract_skills(text):
 
     advice = " ".join(advice_pieces)
     return score, ", ".join(skills), advice
+
+
+def extract_jd_keywords(text):
+    normalized = normalize_text(text)
+    words = re.findall(r"\b[a-z][a-z+#.\-]*\b", normalized)
+    freq = {}
+    for w in words:
+        if len(w) > 2 and w not in STOP_WORDS:
+            freq[w] = freq.get(w, 0) + 1
+    return sorted(freq.keys(), key=lambda k: -freq[k])
+
+
+def compute_ats_score(resume_text, job_description):
+    resume_normalized = normalize_text(resume_text)
+    keywords = extract_jd_keywords(job_description)
+    if not keywords:
+        return 0, [], []
+    matched = [kw for kw in keywords if kw in resume_normalized]
+    missing = [kw for kw in keywords if kw not in resume_normalized]
+    score = round(len(matched) / len(keywords) * 100)
+    return score, matched, missing
