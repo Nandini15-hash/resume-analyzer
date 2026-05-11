@@ -3,7 +3,7 @@ from pathlib import Path
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from werkzeug.utils import secure_filename
 from database import close_db, init_db, create_user, get_user_by_email, save_resume, get_resume_by_id, get_recent_resumes
-from utils import extract_text_from_resume, score_resume_and_extract_skills, compute_ats_score
+from utils import extract_text_from_resume, score_resume_and_extract_skills, compute_ats_score, generate_improvement_suggestions
 
 BASE_DIR = Path(__file__).resolve().parent
 UPLOAD_FOLDER = BASE_DIR / "uploads"
@@ -148,6 +148,34 @@ def resume_detail(resume_id):
             "advice": resume[5],
             "uploaded_at": resume[6],
         },
+    )
+
+
+@app.route("/improve/<int:resume_id>")
+@login_required
+def improve(resume_id):
+    resume = get_resume_by_id(resume_id, session["user_id"])
+    if not resume:
+        flash("Resume not found.", "warning")
+        return redirect(url_for("dashboard"))
+    upload_path = UPLOAD_FOLDER / resume[2]
+    if not upload_path.exists():
+        flash("Resume file not found on disk. Please re-upload the resume.", "warning")
+        return redirect(url_for("resume_detail", resume_id=resume_id))
+    try:
+        text = extract_text_from_resume(upload_path)
+        categories, good_count, total = generate_improvement_suggestions(text)
+    except Exception as error:
+        flash("Could not analyze the resume file.", "danger")
+        app.logger.error("Improve error: %s", error)
+        return redirect(url_for("resume_detail", resume_id=resume_id))
+    return render_template(
+        "improve.html",
+        title="Improvement Suggestions",
+        resume={"id": resume[0], "filename": resume[2], "score": resume[3]},
+        categories=categories,
+        good_count=good_count,
+        total=total,
     )
 
 

@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="improve-shell">
+    <div class="page-head">
+        <div>
+            <h1>Improvement Suggestions</h1>
+            <p class="subtitle">{{ resume.filename }} &mdash; Score: <strong>{{ resume.score }}/100</strong></p>
+        </div>
+        <a href="{{ url_for('resume_detail', resume_id=resume.id) }}" class="button-secondary">Back to result</a>
+    </div>
+
+    <div class="improve-summary card">
+        <div class="improve-summary-inner">
+            <div class="improve-gauge">
+                <strong>{{ good_count }}</strong>
+                <span>/ {{ total }}</span>
+            </div>
+            <div>
+                <p class="improve-summary-label">categories passing</p>
+                {% if good_count == total %}
+                <p class="ats-verdict ats-verdict-good">Excellent — your resume covers all key areas.</p>
+                {% elif good_count >= total // 2 %}
+                <p class="ats-verdict ats-verdict-ok">Good foundation — a few areas need attention.</p>
+                {% else %}
+                <p class="ats-verdict ats-verdict-low">Several important areas need improvement.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="improve-grid">
+        {% for cat in categories %}
+        <div class="improve-card card {% if cat.status == 'good' %}improve-card-good{% else %}improve-card-bad{% endif %}">
+            <div class="improve-card-header">
+                <h2>{{ cat.name }}</h2>
+                {% if cat.status == 'good' %}
+                <span class="improve-badge improve-badge-good">Passing</span>
+                {% else %}
+                <span class="improve-badge improve-badge-bad">Needs work</span>
+                {% endif %}
+            </div>
+            <ul class="improve-tips">
+                {% for tip in cat.tips %}
+                <li>{{ tip }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="improve-footer">
+        <a href="{{ url_for('upload') }}" class="button-primary">Upload improved resume</a>
+        <a href="{{ url_for('ats_match') }}" class="button-tertiary">Check ATS match</a>
+    </div>
+</div>
+{% endblock %}

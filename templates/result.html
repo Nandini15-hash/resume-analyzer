@@ -11,7 +11,10 @@
             <strong>{{ resume.score }}</strong>
             <small>/ 100</small>
         </div>
-        <a class="button-secondary" href="{{ url_for('dashboard') }}">Back to dashboard</a>
+        <div class="result-actions">
+            <a class="button-primary" href="{{ url_for('improve', resume_id=resume.id) }}">Get Improvement Suggestions</a>
+            <a class="button-secondary" href="{{ url_for('dashboard') }}">Back to dashboard</a>
+        </div>
     </div>
 
     <div class="analysis-block">

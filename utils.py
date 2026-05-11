@@ -108,6 +108,114 @@ def score_resume_and_extract_skills(text):
     return score, ", ".join(skills), advice
 
 
+ACTION_VERBS = [
+    "led", "managed", "developed", "built", "created", "improved", "increased",
+    "decreased", "reduced", "achieved", "delivered", "designed", "implemented",
+    "launched", "coordinated", "executed", "streamlined", "optimized",
+    "collaborated", "mentored", "trained", "analyzed", "presented", "spearheaded",
+]
+
+
+def generate_improvement_suggestions(text):
+    normalized = normalize_text(text)
+    emails = extract_emails(text)
+    phones = extract_phone_numbers(text)
+    skills = extract_skills(text)
+    word_count = len(normalized.split())
+    found_verbs = [v for v in ACTION_VERBS if v in normalized]
+    has_metrics = bool(re.search(
+        r"\d+\s*%|\$\s*\d+|\d+\s*(million|thousand|users|customers|clients|members|employees)",
+        normalized,
+    ))
+
+    categories = []
+
+    contact_tips = []
+    if not emails:
+        contact_tips.append("Add a professional email address (e.g. name@domain.com).")
+    if not phones:
+        contact_tips.append("Include a phone number so recruiters can reach you.")
+    if "linkedin" not in normalized:
+        contact_tips.append("Add your LinkedIn profile URL to increase credibility.")
+    if "github" not in normalized:
+        contact_tips.append("Consider adding your GitHub profile if you are in a technical role.")
+    categories.append({
+        "name": "Contact Information",
+        "status": "good" if not contact_tips else "needs-work",
+        "tips": contact_tips or ["All key contact details are present."],
+    })
+
+    summary_tips = []
+    if not any(kw in normalized for kw in ["summary", "objective", "profile", "about me"]):
+        summary_tips.append("Add a professional summary (3-4 sentences) at the top of your resume.")
+        summary_tips.append("Highlight your key skills, years of experience, and career goal.")
+    categories.append({
+        "name": "Professional Summary",
+        "status": "good" if not summary_tips else "needs-work",
+        "tips": summary_tips or ["Professional summary or objective section is present."],
+    })
+
+    experience_tips = []
+    if not any(kw in normalized for kw in ["experience", "employment", "work history", "position", "role"]):
+        experience_tips.append("Add a dedicated Work Experience section.")
+    if len(found_verbs) < 3:
+        experience_tips.append("Use more action verbs — e.g. led, developed, improved, achieved, delivered.")
+    if not has_metrics:
+        experience_tips.append("Quantify achievements (e.g. 'Increased sales by 30%', 'Managed a team of 5').")
+    if not any(kw in normalized for kw in ["project", "projects"]):
+        experience_tips.append("Add a Projects section if you lack extensive formal work experience.")
+    categories.append({
+        "name": "Work Experience",
+        "status": "good" if not experience_tips else "needs-work",
+        "tips": experience_tips or ["Work experience section looks solid with action verbs and metrics."],
+    })
+
+    education_tips = []
+    if not any(kw in normalized for kw in [
+        "education", "degree", "university", "college",
+        "bachelor", "master", "phd", "diploma", "certification",
+    ]):
+        education_tips.append("Add an Education section with your degree, institution, and graduation year.")
+    categories.append({
+        "name": "Education",
+        "status": "good" if not education_tips else "needs-work",
+        "tips": education_tips or ["Education section is present."],
+    })
+
+    skills_tips = []
+    if "skill" not in normalized:
+        skills_tips.append("Add a dedicated Skills section.")
+    if len(skills) < 5:
+        skills_tips.append(f"Only {len(skills)} skill(s) detected. Aim for 8-12 relevant skills.")
+        skills_tips.append("Include both technical skills (tools, languages) and soft skills.")
+    elif len(skills) < 8:
+        skills_tips.append("Consider adding a few more skills to strengthen your profile.")
+    categories.append({
+        "name": "Skills",
+        "status": "good" if len(skills) >= 8 else "needs-work",
+        "tips": skills_tips or [f"{len(skills)} skills detected — strong skills section."],
+    })
+
+    format_tips = []
+    if word_count < 200:
+        format_tips.append(f"Resume is very short ({word_count} words). Aim for at least 400 words.")
+    elif word_count > 900:
+        format_tips.append(f"Resume may be too long ({word_count} words). Keep it concise — under 700 words for most roles.")
+    if not re.search(
+        r"\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec|january|february|march|april|june|july|august|september|october|november|december|20\d\d|19\d\d)\b",
+        normalized,
+    ):
+        format_tips.append("Include dates (month/year) for each experience and education entry.")
+    categories.append({
+        "name": "Length & Format",
+        "status": "good" if not format_tips else "needs-work",
+        "tips": format_tips or [f"Good resume length ({word_count} words) with dates present."],
+    })
+
+    good_count = sum(1 for c in categories if c["status"] == "good")
+    return categories, good_count, len(categories)
+
+
 def extract_jd_keywords(text):
     normalized = normalize_text(text)
     words = re.findall(r"\b[a-z][a-z+#.\-]*\b", normalized)
