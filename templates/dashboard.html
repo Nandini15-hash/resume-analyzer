@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-head">
+    <div>
+        <h1>Welcome back, {{ session.user_name }}!</h1>
+        <p>Upload a resume to see a score, extracted skills, and improvement advice.</p>
+    </div>
+    <a class="button-secondary" href="{{ url_for('upload') }}">Upload Resume</a>
+</div>
+
+<section class="grid-preview">
+    <div class="panel">
+        <h2>How it works</h2>
+        <ul>
+            <li>Sign up and log in</li>
+            <li>Upload a PDF or DOCX file</li>
+            <li>View resume score and extracted skills</li>
+        </ul>
+    </div>
+    <div class="panel panel-highlight">
+        <h2>Fast results</h2>
+        <p>The analyzer checks contact details, keywords, structure, and relevant skills from your resume content.</p>
+    </div>
+</section>
+
+<section class="history">
+    <h2>Your recent uploads</h2>
+    {% if resumes %}
+    <div class="resume-grid">
+        {% for resume in resumes %}
+        <article class="resume-card">
+            <h3>{{ resume.filename }}</h3>
+            <p><strong>Score:</strong> {{ resume.score }}/100</p>
+            <p><strong>Uploaded:</strong> {{ resume.uploaded_at }}</p>
+            <a class="button-tertiary" href="{{ url_for('resume_detail', resume_id=resume.id) }}">View results</a>
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p>No uploads yet. Start by uploading your first resume.</p>
+    {% endif %}
+</section>
+{% endblock %}

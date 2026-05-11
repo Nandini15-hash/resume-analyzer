@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="result-shell">
+    <div class="result-summary">
+        <h1>Resume Analysis</h1>
+        <p>File: <strong>{{ resume.filename }}</strong></p>
+        <p>Uploaded: <strong>{{ resume.uploaded_at }}</strong></p>
+        <div class="result-score">
+            <span>Score</span>
+            <strong>{{ resume.score }}</strong>
+            <small>/ 100</small>
+        </div>
+        <a class="button-secondary" href="{{ url_for('dashboard') }}">Back to dashboard</a>
+    </div>
+
+    <div class="analysis-block">
+        <section>
+            <h2>Extracted skills</h2>
+            {% if resume.skills %}
+            <div class="skill-tags">
+                {% for skill in resume.skills %}
+                <span>{{ skill }}</span>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p>No strong skill keywords were detected. Try adding more technical and business keywords.</p>
+            {% endif %}
+        </section>
+
+        <section>
+            <h2>Improvement advice</h2>
+            <p>{{ resume.advice }}</p>
+        </section>
+    </div>
+</div>
+{% endblock %}

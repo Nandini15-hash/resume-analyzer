@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card auth-card">
+    <h1>Sign Up</h1>
+    <p class="subtitle">Create a secure profile and save your analysis results.</p>
+    <form method="post" class="form-card">
+        <label>Name</label>
+        <input type="text" name="name" placeholder="Your name" required />
+
+        <label>Email</label>
+        <input type="email" name="email" placeholder="you@example.com" required />
+
+        <label>Password</label>
+        <input type="password" name="password" placeholder="Choose a password" required />
+
+        <label>Confirm Password</label>
+        <input type="password" name="confirm" placeholder="Repeat your password" required />
+
+        <button type="submit" class="button-primary">Sign Up</button>
+    </form>
+    <p class="form-note">Already have an account? <a href="{{ url_for('login') }}">Log in</a>.</p>
+</div>
+{% endblock %}

@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card auth-card">
+    <h1>Upload Resume</h1>
+    <p class="subtitle">Select a PDF or DOCX resume file to analyze.</p>
+    <form method="post" enctype="multipart/form-data" class="form-card">
+        <label>Resume file</label>
+        <input type="file" name="resume" accept=".pdf,.docx" required />
+        <button type="submit" class="button-primary">Analyze Resume</button>
+    </form>
+    <p class="form-note"><a href="{{ url_for('dashboard') }}">Back to dashboard</a></p>
+</div>
+{% endblock %}
